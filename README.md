@@ -36,3 +36,11 @@ Originally, matrix ```A``` and ```B``` are stored in column major format. We rep
 Our implementation uses the ```_mm_prefetch()``` command to prefetch data from the memory into the cache before an instruction explicitly requests it, which makes the program more efficient.
 
 ## Files
+- dgemm-blocked.c: Our implementation of efficient matrix multiplication
+- dgemm-naive.c: Naive implementation of matrix multiplication
+- benchmark.cpp: A driver program that runs the
+- CMakeLists.txt: The build system that manages compiling the code
+
+## Credit and Collaboration
+This project is provided by the course (CS267) Applications of Parallel Computers at UC Berkeley, taught by professor Aydin Buluc and Jim Demmel.
+This project is done together with [sprillo](https://github.com/sprillo) and [numisveinsson](https://github.com/numisveinsson)
