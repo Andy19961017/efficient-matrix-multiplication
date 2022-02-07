@@ -9,13 +9,30 @@ In this project, implemented an efficient, single-threaded algorithm of matrix m
 
 ## Technical Details
 The key to achieve efficient matrix multiplication is to reduce the number memory read/write operations as memory is the bottle neck of the program (rather than CPU flop rate). This principle is applied to different levels of memory (as the figure below). Intuitively, when datas are loaded from RAM into cache or register, we want to perform as much computation as possible using the datas before releasing them from cache or register.
-![maxresdefault](https://user-images.githubusercontent.com/37168711/152750417-d5240b1d-b73f-482c-aefc-4104c8842a64.jpeg)
+<p align="center">
+<img width="300" alt="memory" src="https://user-images.githubusercontent.com/37168711/152750417-d5240b1d-b73f-482c-aefc-4104c8842a64.jpeg">
+</p>
 The following techniques are used in our implementation:
+
 ### 1. Blocking
 Matrix ```C``` is divided into blocks of ```M_BLOCK_SIZE × N_BLOCK_SIZE```, ```A``` is divided into blocks of ```M_BLOCK_SIZE × K_BLOCK_SIZE```, and ```B``` is divided into blocks of ```K_BLOCK_SIZE × N_BLOCK_SIZE```. As illustrated in the figure below, each block of ```C``` is derived from the product of a row of blocks of ```A``` and a column of blocks of ```B```. Blocking allows the program to be more **cache friendly**. During the computation, the blocks are loaded into the cache and will not be released before the entire block of ```C``` is calculated.
 <p align="center">
 <img width="662" alt="Screen Shot 2022-02-06 at 11 50 06 PM" src="https://user-images.githubusercontent.com/37168711/152746649-8492055e-5846-4ef4-af53-a6a3ffb4c727.png">
 </p>
+
 ### 2. SIMD microkernel
-We implemented a SIMD (Single Instruction Multiple Data) microkernel with 512-bit Intel Advanced Vector eXtensions (AVX512) intrinsics. This allows multiple datas being calculated in parallel as well as using the registers more efficiently. When the microkernel is executed, it loads a slice of ```A``` and ```B``` into the registers and computes the outer product to derive the associated block of ```C``` (illustrated in the figure below).
-![outer_product](https://user-images.githubusercontent.com/37168711/152752360-8bb35ddb-18a1-4efa-bc2b-55d562368c9c.jpeg)
+We implemented a **SIMD (Single Instruction Multiple Data) microkernel** with **512-bit Intel Advanced Vector eXtensions (AVX512) intrinsics**. This allows multiple datas being calculated in parallel as well as using the registers more efficiently. When the microkernel is executed, it loads a slice of ```A``` and ```B``` into the registers and computes the outer product to derive the associated block of ```C``` (illustrated in the figure below).
+<p align="center">
+<img width="300" alt="outer_product" src="https://user-images.githubusercontent.com/37168711/152752360-8bb35ddb-18a1-4efa-bc2b-55d562368c9c.jpeg">
+</p>
+
+### 3. Repacking
+Originally, matrix ```A``` and ```B``` are stored in column major format. We repack each cell of ```A``` and ```B``` into the order which data are accessed in the algorithm so that when the program is executed, it is loading continuous blocks of memory into the cache. We also align the data to the cache line boundaries (64 bytes). Making the program more cache friendly. The figure below illustrates the repacking logic.
+<p align="center">
+<img width="350" alt="repacking" src="https://user-images.githubusercontent.com/37168711/152753779-97db3543-a15d-4abd-ae05-6400ed402265.png">
+</p>
+
+### 4. Pre-fetching
+Our implementation uses the ```_mm_prefetch()``` command to prefetch data from the memory into the cache before an instruction explicitly requests it, which makes the program more efficient.
+
+## Files
